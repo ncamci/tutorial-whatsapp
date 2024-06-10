@@ -104,12 +104,44 @@ app.post("/webhook", (req, res) => {
                 method: "POST",
                 url: "https://graph.facebook.com/v13.0/" + phon_no_id + "/messages?access_token=" + token,
                 data: {
-                    messaging_product: "whatsapp",
-                    to: from,
-                    text: {
-                        body: responseMessage
-                    }
-                },
+                          "messaging_product": "whatsapp",
+                          "recipient_type": "individual",
+                          "to": "+16505551234",
+                          "type": "interactive",
+                          "interactive": {
+                            "type": "button",
+                            "header": {
+                              "type": "image",
+                              "image": {
+                                "id": "2762702990552401"
+                              }
+                            },
+                            "body": {
+                              "text": "Hi Pablo! Your gardening workshop is scheduled for 9am tomorrow. Use the buttons if you need to reschedule. Thank you!"
+                            },
+                            "footer": {
+                              "text": "Lucky Shrub: Your gateway to succulents!™"
+                            },
+                            "action": {
+                              "buttons": [
+                                {
+                                  "type": "reply",
+                                  "reply": {
+                                    "id": "change-button",
+                                    "title": "Change"
+                                  }
+                                },
+                                {
+                                  "type": "reply",
+                                  "reply": {
+                                    "id": "cancel-button",
+                                    "title": "Cancel"
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    },
                 headers: {
                     "Content-Type": "application/json"
                 }
