@@ -57,7 +57,30 @@ app.post("/webhook", (req, res) => {
 
             // Condition 1: Responding to "hi"
             if (msg_body === "merhaba") {
-                responseMessage = "Merhaba, ben YumChatbot bugün size nasıl yardımcı olabilirim.?";
+                responseMessage = {
+                    type: "button",
+                    body: {
+                        text: responseMessage
+                    },
+                    action: {
+                        buttons: [
+                            {
+                                type: "reply",
+                                reply: {
+                                    id: "yes",
+                                    title: "Yes"
+                                }
+                            },
+                            {
+                                type: "reply",
+                                reply: {
+                                    id: "no",
+                                    title: "No"
+                                }
+                            }
+                        ]
+                    }
+                };
                 userStates[from] = {}; // Reset state
             } 
             // Condition 2: Handling the name flow
