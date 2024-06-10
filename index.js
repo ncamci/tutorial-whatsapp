@@ -1,50 +1,46 @@
-const express=require("express");
-const body_parser=require("body-parser");
-const axios=require("axios");
+const express = require("express");
+const body_parser = require("body-parser");
+const axios = require("axios");
 require('dotenv').config();
 
-const app=express().use(body_parser.json());
+const app = express().use(body_parser.json());
 
-const token=process.env.TOKEN;
-const mytoken=process.env.MYTOKEN;//prasath_token
+const token = process.env.TOKEN;
+const mytoken = process.env.MYTOKEN; // prasath_token
 
-app.listen(process.env.PORT,()=>{
+const userStates = {}; // To track user state
+
+app.listen(process.env.PORT, () => {
     console.log("webhook is listening");
 });
 
-//to verify the callback url from dashboard side - cloud api side
-app.get("/webhook",(req,res)=>{
-   let mode=req.query["hub.mode"];
-   let challange=req.query["hub.challenge"];
-   let token=req.query["hub.verify_token"];
+// To verify the callback URL from the dashboard side - cloud API side
+app.get("/webhook", (req, res) => {
+    let mode = req.query["hub.mode"];
+    let challenge = req.query["hub.challenge"];
+    let token = req.query["hub.verify_token"];
 
-
-    if(mode && token){
-
-        if(mode==="subscribe" && token===mytoken){
-            res.status(200).send(challange);
-        }else{
-            res.status(403);
+    if (mode && token) {
+        if (mode === "subscribe" && token === mytoken) {
+            res.status(200).send(challenge);
+        } else {
+            res.sendStatus(403);
         }
-
     }
-
 });
 
-app.post("/webhook",(req,res)=>{ //i want some 
+app.post("/webhook", (req, res) => {
+    let body_param = req.body;
 
-    let body_param=req.body;
-
-    console.log(JSON.stringify(body_param,null,2));
+    console.log(JSON.stringify(body_param, null, 2));
 
     if (body_param.object) {
         console.log("inside body param");
-        if (
-            body_param.entry && 
+        if (body_param.entry && 
             body_param.entry[0].changes && 
             body_param.entry[0].changes[0].value.messages && 
-            body_param.entry[0].changes[0].value.messages[0]
-        ) {
+            body_param.entry[0].changes[0].value.messages[0]) {
+            
             let phon_no_id = body_param.entry[0].changes[0].value.metadata.phone_number_id;
             let from = body_param.entry[0].changes[0].value.messages[0].from;
             let msg_body = body_param.entry[0].changes[0].value.messages[0].text.body.toLowerCase();
@@ -59,10 +55,13 @@ app.post("/webhook",(req,res)=>{ //i want some
                 userStates[from] = {};
             }
 
+            // Condition 1: Responding to "hi"
             if (msg_body === "hi") {
                 responseMessage = "Hi, how can I help you today?";
                 userStates[from] = {}; // Reset state
-            } else if (msg_body === "name" || userStates[from].awaitingName) {
+            } 
+            // Condition 2: Handling the name flow
+            else if (msg_body === "name" || userStates[from].awaitingName) {
                 if (!userStates[from].awaitingName) {
                     responseMessage = "What's your name?";
                     userStates[from].awaitingName = true;
@@ -71,27 +70,7 @@ app.post("/webhook",(req,res)=>{ //i want some
                     responseMessage = "What's your surname?";
                 } else {
                     userStates[from].surname = msg_body;
-                    responseMessage = `Thank you, ${userStates[from].name} ${userStates[from].surname}!`;
-                    userStates[from] = {}; // Reset state
-                }
-            } else if (msg_body === "age" || userStates[from].awaitingAge) {
-                if (!userStates[from].awaitingAge) {
-                    responseMessage = "How old are you?";
-                    userStates[from].awaitingAge = true;
-                } else {
-                    responseMessage = `Thank you!`;
-                    userStates[from] = {}; // Reset state
-                }
-            } else if (msg_body === "address" || userStates[from].awaitingAddress) {
-                if (!userStates[from].awaitingAddress) {
-                    responseMessage = "What country are you in?";
-                    userStates[from].awaitingAddress = true;
-                } else if (!userStates[from].country) {
-                    userStates[from].country = msg_body;
-                    responseMessage = "What city are you in?";
-                } else {
-                    userStates[from].city = msg_body;
-                    responseMessage = `Thank you!`;
+                    responseMessage = `Thank you, ${userStates[from].name} ${userStates[from].surname}! Your registration is complete!`;
                     userStates[from] = {}; // Reset state
                 }
             } else {
@@ -118,9 +97,8 @@ app.post("/webhook",(req,res)=>{ //i want some
             res.sendStatus(404);
         }
     }
-
 });
 
-app.get("/",(req,res)=>{
-    res.status(200).send("hello this is webhook setup");
+app.get("/", (req, res) => {
+    res.status(200).send("Hello, this is webhook setup");
 });
