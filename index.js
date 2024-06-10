@@ -56,25 +56,25 @@ app.post("/webhook", (req, res) => {
             }
 
             // Condition 1: Responding to "hi"
-            if (msg_body === "hi") {
-                responseMessage = "Hi, how can I help you today?";
+            if (msg_body === "merhaba") {
+                responseMessage = "Merhaba, ben YumChatbot bugün size nasıl yardımcı olabilirim.?";
                 userStates[from] = {}; // Reset state
             } 
             // Condition 2: Handling the name flow
-            else if (msg_body === "name" || userStates[from].awaitingName) {
+            else if (msg_body === "isim" || userStates[from].awaitingName) {
                 if (!userStates[from].awaitingName) {
-                    responseMessage = "What's your name?";
+                    responseMessage = "Adınız nedir?";
                     userStates[from].awaitingName = true;
                 } else if (!userStates[from].name) {
                     userStates[from].name = msg_body;
-                    responseMessage = "What's your surname?";
+                    responseMessage = "Soyadınız nedir?";
                 } else {
                     userStates[from].surname = msg_body;
-                    responseMessage = `Thank you, ${userStates[from].name} ${userStates[from].surname}! Your registration is complete!`;
+                    responseMessage = `Teşekkürler, ${userStates[from].name} ${userStates[from].surname}! Kayıt işleminiz gerçekleşmiştir!`;
                     userStates[from] = {}; // Reset state
                 }
             } else {
-                responseMessage = "Sorry, I didn't understand that. Can you please rephrase?";
+                responseMessage = "Üzgünüm sizi anlayamadım. Tekrar eder misiniz?";
             }
 
             axios({
