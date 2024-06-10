@@ -57,30 +57,7 @@ app.post("/webhook", (req, res) => {
 
             // Condition 1: Responding to "hi"
             if (msg_body === "merhaba") {
-                responseMessage = {
-                    type: "button",
-                    body: {
-                        text: responseMessage
-                    },
-                    action: {
-                        buttons: [
-                            {
-                                type: "reply",
-                                reply: {
-                                    id: "yes",
-                                    title: "Yes"
-                                }
-                            },
-                            {
-                                type: "reply",
-                                reply: {
-                                    id: "no",
-                                    title: "No"
-                                }
-                            }
-                        ]
-                    }
-                };
+                responseMessage = "Merhaba, ben YumChatbot bugün size nasıl yardımcı olabilirim?";
                 userStates[from] = {}; // Reset state
             } 
             // Condition 2: Handling the name flow
@@ -104,44 +81,12 @@ app.post("/webhook", (req, res) => {
                 method: "POST",
                 url: "https://graph.facebook.com/v13.0/" + phon_no_id + "/messages?access_token=" + token,
                 data: {
-                          "messaging_product": "whatsapp",
-                          "recipient_type": "individual",
-                          "to": "+16505551234",
-                          "type": "interactive",
-                          "interactive": {
-                            "type": "button",
-                            "header": {
-                              "type": "image",
-                              "image": {
-                                "id": "2762702990552401"
-                              }
-                            },
-                            "body": {
-                              "text": "Hi Pablo! Your gardening workshop is scheduled for 9am tomorrow. Use the buttons if you need to reschedule. Thank you!"
-                            },
-                            "footer": {
-                              "text": "Lucky Shrub: Your gateway to succulents!™"
-                            },
-                            "action": {
-                              "buttons": [
-                                {
-                                  "type": "reply",
-                                  "reply": {
-                                    "id": "change-button",
-                                    "title": "Change"
-                                  }
-                                },
-                                {
-                                  "type": "reply",
-                                  "reply": {
-                                    "id": "cancel-button",
-                                    "title": "Cancel"
-                              }
-                            }
-                          ]
-                        }
-                      }
-                    },
+                    messaging_product: "whatsapp",
+                    to: from,
+                    text: {
+                        body: responseMessage
+                    }
+                },
                 headers: {
                     "Content-Type": "application/json"
                 }
