@@ -83,6 +83,31 @@ app.post("/webhook", (req, res) => {
                 data: {
                     messaging_product: "whatsapp",
                     to: from,
+                    type: "interactive",
+   interactive: {
+        "type": "button",
+        "body": {
+            "text": "<BUTTON_TEXT>"
+        },
+        "action": {
+            "buttons": [
+                {
+                    "type": "reply",
+                    "reply": {
+                        "id": "1",
+                        "title": "1"
+                    }
+                },
+                {
+                    "type": "reply",
+                    "reply": {
+                        "id": "2",
+                        "title": "2"
+                    }
+                }
+            ]
+        }
+    }
                     text: {
                         body: responseMessage
                     }
