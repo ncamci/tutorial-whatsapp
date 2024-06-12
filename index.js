@@ -59,7 +59,7 @@ app.post("/webhook",(req,res)=>{ //i want some
                        messaging_product:"whatsapp",
                        to:from,
                        text:{
-                           body:"Merhaba, Ben YumChatbot, size nasıl yardımcı olabilirim?" // +msg_body
+                           body: "Merhaba, Ben YumChatbot, size nasıl yardımcı olabilirim?" +phon_no_id // +msg_body
                        }
                    },
                    headers:{
