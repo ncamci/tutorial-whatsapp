@@ -55,12 +55,16 @@ app.post("/webhook",(req,res)=>{ //i want some
                axios({
                    method:"POST",
                    url:"https://graph.facebook.com/v13.0/"+phon_no_id+"/messages?access_token="+token,
-                   data:{
-                       messaging_product:"whatsapp",
-                       to:from,
-                       text:{
-                           body: "Merhaba, Ben YumChatbot, size nasıl yardımcı olabilirim?"// +msg_body
-                       }
+                    data:{
+                        messaging_product: "whatsapp",    
+                        recipient_type: "individual",
+                        to: from,
+                        type: "text",
+                        text: {
+                            preview_url: false,
+                            body: "you made it with full body"
+                        }
+                       
                    },
                    headers:{
                        "Content-Type":"application/json"
