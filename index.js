@@ -55,17 +55,36 @@ app.post("/webhook",(req,res)=>{ //i want some
                axios({
                    method:"POST",
                    url:"https://graph.facebook.com/v13.0/"+phon_no_id+"/messages?access_token="+token,
-                    data:{
-                        messaging_product: "whatsapp",    
+                                        data:{
+                        messaging_product: "whatsapp",
                         recipient_type: "individual",
                         to: from,
-                        type: "text",
-                        text: {
-                            preview_url: false,
-                            body: "you made it with full body"
+                        type: "interactive",
+                        interactive: {
+                            type: "button",
+                            body: {
+                                text: "body text button 1"
+                            },
+                            action: {
+                                buttons: [
+                                    {
+                                        type: "reply",
+                                        reply: {
+                                            id: "reply button id 2",
+                                            title: "reply button title 3"
+                                        }
+                                    },
+                                    {
+                                        type: "reply",
+                                        reply: {
+                                            id: "reply button id 4",
+                                            title: "reply button title 5"
+                                        }
+                                    }
+                                ]
+                            }
                         }
-                       
-                   },
+                    },
                    headers:{
                        "Content-Type":"application/json"
                    }
