@@ -1,105 +1,101 @@
-const express=require("express");
-const body_parser=require("body-parser");
-const axios=require("axios");
+const express = require("express");
+const body_parser = require("body-parser");
+const axios = require("axios");
 require('dotenv').config();
 
-const app=express().use(body_parser.json());
+// OpenAI Client Setup
+const { OpenAI } = require('openai');
+const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+});
 
-const token=process.env.TOKEN;
-const mytoken=process.env.MYTOKEN;//prasath_token
+const app = express().use(body_parser.json());
 
-app.listen(process.env.PORT,()=>{
+const token = process.env.TOKEN;
+const mytoken = process.env.MYTOKEN; // prasath_token
+
+app.listen(process.env.PORT, () => {
     console.log("webhook is listening");
 });
 
-//to verify the callback url from dashboard side - cloud api side
-app.get("/webhook",(req,res)=>{
-   let mode=req.query["hub.mode"];
-   let challange=req.query["hub.challenge"];
-   let token=req.query["hub.verify_token"];
+// Webhook Verification
+app.get("/webhook", (req, res) => {
+    let mode = req.query["hub.mode"];
+    let challange = req.query["hub.challenge"];
+    let token = req.query["hub.verify_token"];
 
-
-    if(mode && token){
-
-        if(mode==="subscribe" && token===mytoken){
+    if (mode && token) {
+        if (mode === "subscribe" && token === mytoken) {
             res.status(200).send(challange);
-        }else{
-            res.status(403);
+        } else {
+            res.status(403).send('Forbidden');
         }
-
     }
-
 });
 
-app.post("/webhook",(req,res)=>{ //i want some 
+// Webhook for receiving messages and responding via OpenAI
+app.post("/webhook", async (req, res) => {
+    let body_param = req.body;
 
-    let body_param=req.body;
+    console.log(JSON.stringify(body_param, null, 2));
 
-    console.log(JSON.stringify(body_param,null,2));
+    if (body_param.object) {
+        if (body_param.entry &&
+            body_param.entry[0].changes &&
+            body_param.entry[0].changes[0].value.messages &&
+            body_param.entry[0].changes[0].value.messages[0]) {
 
-    if(body_param.object){
-        console.log("inside body param");
-        if(body_param.entry && 
-            body_param.entry[0].changes && 
-            body_param.entry[0].changes[0].value.messages && 
-            body_param.entry[0].changes[0].value.messages[0]  
-            ){
-               let phon_no_id=body_param.entry[0].changes[0].value.metadata.phone_number_id;
-               let from = body_param.entry[0].changes[0].value.messages[0].from; 
-               let msg_body = body_param.entry[0].changes[0].value.messages[0].text.body;
+            let phon_no_id = body_param.entry[0].changes[0].value.metadata.phone_number_id;
+            let from = body_param.entry[0].changes[0].value.messages[0].from;
+            let msg_body = body_param.entry[0].changes[0].value.messages[0].text.body;
 
-               console.log("phone number "+phon_no_id);
-               console.log("from "+from);
-               console.log("boady param "+msg_body);
+            console.log("phone number " + phon_no_id);
+            console.log("from " + from);
+            console.log("body param " + msg_body);
 
-               axios({
-                   method:"POST",
-                   url:"https://graph.facebook.com/v13.0/"+phon_no_id+"/messages?access_token="+token,
-                                        data:{
+            try {
+                // Send the message body to OpenAI for a response
+                const openaiResponse = await openai.chat.completions.create({
+                    model: "gpt-4",  // Or any other model you'd like to use
+                    messages: [
+                        { role: "system", content: "You are a helpful assistant." },
+                        { role: "user", content: msg_body }
+                    ]
+                });
+
+                // Extract the message from OpenAI response
+                const openaiReply = openaiResponse.choices[0].message.content;
+
+                // Send the OpenAI response back to the user via WhatsApp
+                await axios({
+                    method: "POST",
+                    url: `https://graph.facebook.com/v13.0/${phon_no_id}/messages?access_token=${token}`,
+                    data: {
                         messaging_product: "whatsapp",
                         recipient_type: "individual",
                         to: from,
-                        type: "interactive",
-                        interactive: {
-                            type: "button",
-                            body: {
-                                text: "body text button 1"+from
-                            },
-                            action: {
-                                buttons: [
-                                    {
-                                        type: "reply",
-                                        reply: {
-                                            id: "reply button id 2",
-                                            title: "reply button title 3"
-                                        }
-                                    },
-                                    {
-                                        type: "reply",
-                                        reply: {
-                                            id: "reply button id 4",
-                                            title: "reply button title 5"
-                                        }
-                                    }
-                                ]
-                            }
-                        }
+                        type: "text",
+                        text: {
+                            body: openaiReply,
+                        },
                     },
-                   headers:{
-                       "Content-Type":"application/json"
-                   }
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                });
 
-               });
-
-               res.sendStatus(200);
-            }else{
-                res.sendStatus(404);
+                res.sendStatus(200);  // Successfully handled the request
+            } catch (error) {
+                console.error("Error interacting with OpenAI or sending message:", error);
+                res.sendStatus(500);  // Internal server error if something goes wrong
             }
-
+        } else {
+            res.sendStatus(404);  // No valid message found
+        }
     }
-
 });
 
-app.get("/",(req,res)=>{
+// Health check route
+app.get("/", (req, res) => {
     res.status(200).send("hello this is webhook setup");
 });
